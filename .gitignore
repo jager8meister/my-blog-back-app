@@ -1,0 +1,16 @@
+.DS_Store
+*.class
+*.log
+*.tmp
+*.swp
+*.out
+*~
+
+/target/
+/build/
+/out/
+/.gradle/
+/.mvn/timing.properties
+
+.idea/
+*.iml
