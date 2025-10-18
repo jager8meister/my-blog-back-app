@@ -1,4 +1,4 @@
-package com.myblogbackapp.web;
+package com.myblogbackapp.controller;
 
 import com.myblogbackapp.service.LikeService;
 import io.swagger.v3.oas.annotations.Operation;

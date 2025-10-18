@@ -1,4 +1,4 @@
-package com.myblogbackapp.web;
+package com.myblogbackapp.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

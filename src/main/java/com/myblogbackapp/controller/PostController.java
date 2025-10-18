@@ -1,4 +1,4 @@
-package com.myblogbackapp.web;
+package com.myblogbackapp.controller;
 
 import com.myblogbackapp.dto.request.CreatePostRequestDto;
 import com.myblogbackapp.dto.request.UpdatePostRequestDto;
