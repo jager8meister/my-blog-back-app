@@ -14,6 +14,7 @@ import com.myblogbackapp.exception.PostNotFoundException;
 import com.myblogbackapp.repository.CommentRepository;
 import com.myblogbackapp.repository.PostRepository;
 import com.myblogbackapp.service.CommentService;
+import com.myblogbackapp.mapper.CommentMapper;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +29,7 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final PostRepository postRepository;
+    private final CommentMapper commentMapper;
 
     @Override
     public List<PostCommentResponseDto> getPostComments(Long postId) {
@@ -36,13 +38,10 @@ public class CommentServiceImpl implements CommentService {
             throw new PostNotFoundException("Post not found: " + postId);
         }
 
-        return commentRepository.findByPostIdOrderByIdAsc(postId).stream()
-                .map(comment -> new PostCommentResponseDto(
-                        comment.getId(),
-                        comment.getText(),
-                        postId
-                ))
-                .toList();
+        List<Comment> comments = commentRepository.findByPostIdOrderByIdAsc(postId);
+        return comments.isEmpty()
+                ? List.of()
+                : commentMapper.toResponseList(comments);
     }
 
     @Override
@@ -52,29 +51,21 @@ public class CommentServiceImpl implements CommentService {
             throw new CommentPostIdMissingException("postId must be provided");
         }
 
-        if (request.text() == null || request.text().isBlank()) {
+        if (request.getText() == null || request.getText().isBlank()) {
             throw new CommentTextEmptyException("Comment text must not be empty");
         }
 
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new PostNotFoundException("Post not found: " + postId));
 
-        Comment comment = new Comment(
-                null,
-                request.text().trim(),
-                post
-        );
+        Comment comment = commentMapper.toEntity(request, post);
         Comment saved = commentRepository.save(comment);
 
         post.setCommentsCount(post.getCommentsCount() + 1);
         postRepository.save(post);
 
         log.info("Comment {} added to post {}", saved.getId(), postId);
-        return new PostCommentResponseDto(
-                saved.getId(),
-                saved.getText(),
-                post.getId()
-        );
+        return commentMapper.toResponse(saved);
     }
 
     @Override
@@ -84,7 +75,7 @@ public class CommentServiceImpl implements CommentService {
             throw new CommentIdentifiersMissingException("id and postId must be provided");
         }
 
-        if (request.text() == null || request.text().isBlank()) {
+        if (request.getText() == null || request.getText().isBlank()) {
             throw new CommentTextEmptyException("Comment text must not be empty");
         }
 
@@ -98,15 +89,11 @@ public class CommentServiceImpl implements CommentService {
             throw new CommentOwnershipException("Comment does not belong to the specified post");
         }
 
-        comment.setText(request.text().trim());
+        commentMapper.updateEntity(request, comment);
         Comment saved = commentRepository.save(comment);
 
         log.info("Comment {} updated for post {}", commentId, postId);
-        return new PostCommentResponseDto(
-                saved.getId(),
-                saved.getText(),
-                post.getId()
-        );
+        return commentMapper.toResponse(saved);
     }
 
     @Override

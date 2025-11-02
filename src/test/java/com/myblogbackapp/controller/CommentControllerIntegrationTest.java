@@ -15,6 +15,9 @@ import com.myblogbackapp.repository.PostRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -226,5 +229,10 @@ class CommentControllerIntegrationTest {
         return node.get("id").asLong();
     }
 
-    private record CommentPayload(String text) {}
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class CommentPayload {
+        private String text;
+    }
 }

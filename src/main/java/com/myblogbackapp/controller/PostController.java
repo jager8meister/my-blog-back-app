@@ -91,16 +91,15 @@ public class PostController {
     @Operation(summary = "Download post image")
     public ResponseEntity<byte[]> getPostImage(@Parameter(description = "Post identifier", required = true) @PathVariable("id") Long id) {
         PostImageResponseDto image = postService.getPostImage(id);
-        String contentType = image.contentType();
+        String contentType = image.getContentType();
         MediaType mediaType = MediaType.parseMediaType(contentType);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(mediaType);
-        String filename = image.filename();
+        String filename = image.getFilename();
         if (filename != null && !filename.isBlank()) {
             headers.setContentDisposition(ContentDisposition.inline().filename(filename).build());
         }
-
-        return new ResponseEntity<>(image.data(), headers, HttpStatus.OK);
+        return new ResponseEntity<>(image.getData(), headers, HttpStatus.OK);
     }
 }

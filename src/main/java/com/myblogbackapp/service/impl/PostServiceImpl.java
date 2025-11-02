@@ -42,19 +42,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostResponseDto createPost(CreatePostRequestDto request) {
-        log.info("Creating post with title='{}'", request != null ? request.title() : null);
-        if (request.title() == null || request.title().isBlank()) {
+        log.info("Creating post with title='{}'", request != null ? request.getTitle() : null);
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
             throw new PostTitleEmptyException("title must not be empty");
         }
-        if (request.text() == null || request.text().isBlank()) {
+        if (request.getText() == null || request.getText().isBlank()) {
             throw new PostTextEmptyException("text must not be empty");
         }
-        List<String> tags = request.tags() == null ? List.of() : request.tags();
-        Post post = Post.builder().
-                title(request.title().trim())
-                .text(request.text().trim())
-                .tags(tags)
-                .build();
+        Post post = postMapper.toEntity(request);
 
         Post saved = postRepository.saveAndFlush(post);
         log.info("Post created with id={}", saved.getId());
@@ -177,20 +172,17 @@ public class PostServiceImpl implements PostService {
         if (id == null || id <= 0) {
             throw new PostIdMissingException("id must be provided");
         }
-        if (request.title() == null || request.title().isBlank()) {
+        if (request.getTitle() == null || request.getTitle().isBlank()) {
             throw new PostTitleEmptyException("title must not be empty");
         }
-        if (request.text() == null || request.text().isBlank()) {
+        if (request.getText() == null || request.getText().isBlank()) {
             throw new PostTextEmptyException("text must not be empty");
         }
-        List<String> tags = request.tags() == null ? List.of() : request.tags();
 
         Post post = postRepository.findById(id)
                 .orElseThrow(() -> new PostNotFoundException("Post not found: " + id));
 
-        post.setTitle(request.title().trim());
-        post.setText(request.text().trim());
-        post.setTags(tags);
+        postMapper.updateEntity(request, post);
 
         Post updated = postRepository.saveAndFlush(post);
         log.info("Post {} updated", id);
