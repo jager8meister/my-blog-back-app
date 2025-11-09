@@ -14,14 +14,17 @@ import jakarta.persistence.Lob;
 import jakarta.persistence.Table;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "posts")
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @Builder
 @AllArgsConstructor
@@ -37,7 +40,7 @@ public class Post {
     @Column(name = "post_text", columnDefinition = "TEXT")
     private String text;
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "post_tags", joinColumns = @JoinColumn(name = "post_id"))
     @Column(name = "tag")
     @Builder.Default
@@ -63,4 +66,21 @@ public class Post {
     @JsonIgnore
     @Column(name = "image_filename")
     private String imageFilename;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Post post = (Post) o;
+        return Objects.equals(id, post.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
+    }
 }

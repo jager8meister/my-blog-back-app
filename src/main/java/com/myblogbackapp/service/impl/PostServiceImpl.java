@@ -18,20 +18,23 @@ import com.myblogbackapp.mapper.PostMapper;
 import com.myblogbackapp.repository.CommentRepository;
 import com.myblogbackapp.repository.PostRepository;
 import com.myblogbackapp.service.PostService;
+import com.myblogbackapp.service.helper.PostPageProvider;
+import com.myblogbackapp.service.helper.PostPageRequestFactory;
+import com.myblogbackapp.service.helper.PostSearchCriteriaFactory;
+import com.myblogbackapp.service.helper.PostsResponseFactory;
+import com.myblogbackapp.service.model.PostSearchCriteria;
 import java.io.IOException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @Slf4j
 @RequiredArgsConstructor
 public class PostServiceImpl implements PostService {
@@ -39,6 +42,10 @@ public class PostServiceImpl implements PostService {
     private final PostRepository postRepository;
     private final CommentRepository commentRepository;
     private final PostMapper postMapper;
+    private final PostPageRequestFactory postPageRequestFactory;
+    private final PostSearchCriteriaFactory postSearchCriteriaFactory;
+    private final PostPageProvider postPageProvider;
+    private final PostsResponseFactory postsResponseFactory;
 
     @Override
     public PostResponseDto createPost(CreatePostRequestDto request) {
@@ -107,63 +114,10 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostsResponseDto getPosts(String search, int pageNumber, int pageSize) {
         log.info("Fetching posts with search='{}', pageNumber={}, pageSize={}", search, pageNumber, pageSize);
-        int safePageSize = Math.max(1, pageSize);
-        int safePageNumber = Math.max(1, pageNumber) - 1;
-        Pageable pageable = PageRequest.of(
-                safePageNumber,
-                safePageSize,
-                Sort.by(Sort.Direction.ASC, "id")
-        );
-
-        String normalized = search == null ? "" : search.trim();
-
-        List<String> tokens = normalized.isBlank()
-                ? List.of()
-                : java.util.Arrays.stream(normalized.split("\\s+"))
-                .map(String::trim)
-                .filter(token -> !token.isEmpty())
-                .toList();
-
-        List<String> tagFilters = tokens.stream()
-                .filter(token -> token.startsWith("#"))
-                .map(token -> token.substring(1))
-                .map(String::trim)
-                .filter(token -> !token.isEmpty())
-                .map(String::toLowerCase)
-                .distinct()
-                .toList();
-
-        List<String> textParts = tokens.stream()
-                .filter(token -> !token.startsWith("#"))
-                .toList();
-
-        String substring = textParts.isEmpty() ? "" : String.join(" ", textParts);
-
-        Page<Post> page;
-        if (tagFilters.isEmpty() && substring.isBlank()) {
-            page = postRepository.findAll(pageable);
-        } else if (tagFilters.isEmpty()) {
-            page = postRepository.findByTitleContainingIgnoreCaseOrTextContainingIgnoreCase(substring, substring, pageable);
-        } else {
-            page = substring.isBlank() ?
-                    postRepository.findByAllTags(tagFilters, tagFilters.size(), pageable) :
-                    postRepository.findBySearchTermAndAllTags(substring, tagFilters, tagFilters.size(), pageable);
-        }
-
-        List<PostResponseDto> postDtos = page.getContent().isEmpty()
-                ? List.of()
-                : postMapper.toResponseList(page.getContent());
-
-        if (postDtos.isEmpty()) {
-            return new PostsResponseDto(List.of(), false, false, 0);
-        }
-
-        return new PostsResponseDto(
-                postDtos,
-                page.hasPrevious(),
-                page.hasNext(),
-                page.getTotalPages()
-        );
+        Pageable pageable = postPageRequestFactory.create(pageNumber, pageSize);
+        PostSearchCriteria criteria = postSearchCriteriaFactory.fromRawSearch(search);
+        Page<Post> page = postPageProvider.fetch(criteria, pageable);
+        return postsResponseFactory.fromPage(page);
     }
 
     @Override
