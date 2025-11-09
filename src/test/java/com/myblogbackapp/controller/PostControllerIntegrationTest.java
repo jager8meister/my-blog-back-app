@@ -205,7 +205,7 @@ class PostControllerIntegrationTest {
 
     @Test
     void updatePost_missingId_returnsBadRequest() throws Exception {
-        PostUpdatePayload payload = new PostUpdatePayload(null, "Body", List.of());
+        PostUpdatePayload payload = new PostUpdatePayload("Valid title", "Body", List.of());
 
         mockMvc.perform(put("/api/posts/{id}", 0)
                         .contentType(MediaType.APPLICATION_JSON)

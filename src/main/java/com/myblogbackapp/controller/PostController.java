@@ -9,6 +9,7 @@ import com.myblogbackapp.service.PostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -46,7 +47,7 @@ public class PostController {
     @PostMapping("/api/posts")
     @ResponseStatus(HttpStatus.CREATED)
     @Operation(summary = "Create a new post")
-    public PostResponseDto createPost(@RequestBody CreatePostRequestDto request) {
+    public PostResponseDto createPost(@Valid @RequestBody CreatePostRequestDto request) {
         return postService.createPost(request);
     }
 
@@ -55,7 +56,7 @@ public class PostController {
     public PostResponseDto updatePost(
             @Parameter(description = "Post identifier", required = true) @PathVariable("id") Long id,
 
-            @RequestBody UpdatePostRequestDto request
+            @Valid @RequestBody UpdatePostRequestDto request
     ) {
         return postService.updatePost(id, request);
     }

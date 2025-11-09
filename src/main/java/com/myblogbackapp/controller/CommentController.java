@@ -7,8 +7,8 @@ import com.myblogbackapp.service.CommentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.util.List;
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -48,7 +48,7 @@ public class CommentController {
     public PostCommentResponseDto addPostComment(
             @Parameter(description = "Post identifier", required = true) @PathVariable("postId") Long postId,
 
-            @RequestBody CreateCommentRequestDto request
+            @Valid @RequestBody CreateCommentRequestDto request
     ) {
         return commentService.addComment(postId, request);
     }
@@ -60,7 +60,7 @@ public class CommentController {
 
             @Parameter(description = "Comment identifier", required = true) @PathVariable("commentId") Long commentId,
 
-            @RequestBody UpdateCommentRequestDto request
+            @Valid @RequestBody UpdateCommentRequestDto request
     ) {
         return commentService.updateComment(postId, commentId, request);
     }
